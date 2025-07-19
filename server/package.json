@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "bun --watch src/app.ts",
+    "build": "cd ../watchfi_vite && pnpm build && mv dist/* ../server/public/",
+    "start": "bun run src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
