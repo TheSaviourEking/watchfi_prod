@@ -2,14 +2,17 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/app.ts",
   "scripts": {
     "dev": "bun --watch src/app.ts",
-    "build": "pnpm install && cd ../client && pnpm install && pnpm build",
-    "build_prev": "pnpm install && rm -rf ./public && mkdir public && cd ../watchfi_vite && rm -rf ./dist && pnpm install && pnpm build && mv dist/* ../server/public",
-    "start": "NODE_ENV=prod && bun run src/app.ts",
+    "prebuild": "echo 'Starting build process...'",
+    "build": "pnpm install && cd ../client && pnpm install && pnpm run build && cp -r dist/* ../server/public/",
+    "build:render": "cd ../client && pnpm install && pnpm run build && mkdir -p ../server/public && cp -r dist/* ../server/public/",
+    "postbuild": "ls -la public/",
+    "start": "NODE_ENV=production bun run src/app.ts",
     "generate": "npx prisma generate",
     "postinstall": "npx prisma generate",
+    "db:push": "npx prisma db push",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -27,5 +30,8 @@
   "devDependencies": {
     "@types/node": "^24.0.13",
     "prisma": "^6.11.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
