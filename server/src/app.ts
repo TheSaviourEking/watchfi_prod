@@ -45,16 +45,30 @@ server.get('/health', async (_, reply: FastifyReply) => {
 });
 
 // Determine the correct path for static files
+// Since build scripts copy/move files to server/public, use that as primary path
 const staticPath = path.join(__dirname, '..', 'public');
 const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
 
-// Check which path exists and log it
-let finalStaticPath = staticPath;
-if (existsSync(clientDistPath)) {
+let finalStaticPath = staticPath; // Always default to server/public first
+
+// Check if server/public exists and has files, otherwise fallback to client/dist (for dev)
+if (existsSync(staticPath)) {
+    const hasIndexInPublic = existsSync(path.join(staticPath, 'index.html'));
+    if (hasIndexInPublic || process.env.NODE_ENV === 'production') {
+        finalStaticPath = staticPath;
+        server.log.info(`Using server public path: ${staticPath}`);
+    } else {
+        // Fallback to client/dist for development if public doesn't have index.html
+        if (existsSync(clientDistPath) && existsSync(path.join(clientDistPath, 'index.html'))) {
+            finalStaticPath = clientDistPath;
+            server.log.info(`Fallback to client dist path: ${clientDistPath}`);
+        } else {
+            server.log.warn(`Using server public path but no index.html found: ${staticPath}`);
+        }
+    }
+} else if (existsSync(clientDistPath)) {
     finalStaticPath = clientDistPath;
-    server.log.info(`Using client dist path: ${clientDistPath}`);
-} else if (existsSync(staticPath)) {
-    server.log.info(`Using server public path: ${staticPath}`);
+    server.log.info(`Server public doesn't exist, using client dist path: ${clientDistPath}`);
 } else {
     server.log.error('No static files directory found!');
     server.log.error(`Checked paths: ${staticPath}, ${clientDistPath}`);
@@ -74,6 +88,32 @@ await server.register(import('@fastify/static'), {
 
 // Add a specific route for the root path to serve index.html
 server.get('/', async (request, reply) => {
+    const indexPath = path.join(finalStaticPath, 'index.html');
+
+    if (!existsSync(indexPath)) {
+        server.log.error(`index.html not found at: ${indexPath}`);
+        reply.type('text/html');
+        return reply.status(404).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Application Error</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    .error { background: #ffebee; border: 1px solid #e57373; padding: 20px; border-radius: 4px; }
+                </style>
+            </head>
+            <body>
+                <div class="error">
+                    <h1>Application Error</h1>
+                    <p>Static files not found at: ${indexPath}</p>
+                    <p>Make sure the build process completed successfully by running: <code>pnpm run build</code></p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+
     reply.type('text/html');
     return reply.sendFile('index.html');
 });
@@ -127,11 +167,27 @@ server.setNotFoundHandler(async (request: FastifyRequest, reply: FastifyReply) =
 
     if (!existsSync(indexPath)) {
         server.log.error(`index.html not found at: ${indexPath}`);
-        return reply.status(404).send({
-            error: 'Static files not found',
-            path: indexPath,
-            hint: 'Make sure the build process completed successfully'
-        });
+        // Send HTML error page instead of JSON
+        reply.type('text/html');
+        return reply.status(404).send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Application Error</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    .error { background: #ffebee; border: 1px solid #e57373; padding: 20px; border-radius: 4px; }
+                </style>
+            </head>
+            <body>
+                <div class="error">
+                    <h1>Application Error</h1>
+                    <p>Static files not found at: ${indexPath}</p>
+                    <p>Make sure the build process completed successfully by running: <code>pnpm run build</code></p>
+                </div>
+            </body>
+            </html>
+        `);
     }
 
     // Set content type for HTML and serve index.html
