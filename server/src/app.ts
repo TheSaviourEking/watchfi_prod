@@ -119,7 +119,7 @@ server.get('/', async (request, reply) => {
 });
 
 // Add a route to check static files
-server.get('/debug/static', async (request, reply) => {
+server.get('/debug/stati', async (request, reply) => {
     if (process.env.NODE_ENV === 'production') {
         return reply.status(404).send({ error: 'Not found' });
     }
@@ -140,6 +140,35 @@ server.get('/debug/static', async (request, reply) => {
             staticPath: finalStaticPath
         };
     }
+});
+
+server.get('/debug/static', async (request, reply) => {
+    const fs = await import('fs');
+    try {
+        const files = fs.readdirSync(finalStaticPath);
+        const indexExists = fs.existsSync(path.join(finalStaticPath, 'index.html'));
+        const indexContent = indexExists ? fs.readFileSync(path.join(finalStaticPath, 'index.html'), 'utf8') : 'Not found';
+        return {
+            staticPath: finalStaticPath,
+            files: files.slice(0, 20),
+            indexExists,
+            indexContentLength: indexContent.length,
+            totalFiles: files.length
+        };
+    } catch (error) {
+        return {
+            error: error.message,
+            staticPath: finalStaticPath
+        };
+    }
+});
+
+server.get('/debug/index', async (request, reply) => {
+    const indexPath = path.join(finalStaticPath, 'index.html');
+    const fs = await import('fs');
+    return {
+        content: fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : 'Not found',
+    };
 });
 
 // Register API routes - MOVED BEFORE setNotFoundHandler
