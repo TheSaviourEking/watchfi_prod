@@ -1,4 +1,4 @@
-import fastify from 'fastify';
+import fastify, { FastifyReply } from 'fastify';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import prisma from './lib/prisma.js';
@@ -15,15 +15,20 @@ const server = fastify({ logger: true });
 
 // Register CORS plugin
 server.register(import('@fastify/cors'), {
-    origin: process.env.NODE_ENV === 'production' ? ['https://your-production-url.com'] : true,
+    origin: process.env.NODE_ENV === 'production' ? ['https://watchfi-prod.onrender.com'] : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
 // Health check endpoint
-server.get('/health', async () => {
-    return { status: 'ok' }; // Fixed typo: '0k' to 'ok'
+server.get('/health', async (_, reply: FastifyReply) => {
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        return { status: 'Database connected' };
+    } catch (error) {
+        reply.status(500).send({ error: 'Database connection failed', details: error.message });
+    }
 });
 
 // Serve static files from the public directory
