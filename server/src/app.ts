@@ -33,7 +33,8 @@ server.get('/health', async (_, reply: FastifyReply) => {
 
 // Serve static files from the public directory
 server.register(import('@fastify/static'), {
-    root: path.join(__dirname, '..', 'public'), // Fixed typo: ',,' to '..'
+    // root: path.join(__dirname, '..',"..","watchfi_vite","dist", 'public'), // Fixed typo: ',,' to '..'
+    root: path.join(__dirname, '..', "..", "watchfi_vite", "dist"),
     prefix: '/',
     wildcard: false,
 });
