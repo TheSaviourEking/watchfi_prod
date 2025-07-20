@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: watchfi-server
+    env: node
+    buildCommand: cd server && pnpm install && pnpm run build:render
+    startCommand: cd server && pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: watchfi-db
+          property: connectionString
+    autoDeploy: false
