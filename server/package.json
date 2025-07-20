@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "bun --watch src/app.ts",
-    "build": "pnpm install && cd ../watchfi_vite && pnpm install && pnpm build",
+    "build": "pnpm install && cd ../client && pnpm install && pnpm build",
     "build_prev": "pnpm install && rm -rf ./public && mkdir public && cd ../watchfi_vite && rm -rf ./dist && pnpm install && pnpm build && mv dist/* ../server/public",
     "start": "NODE_ENV=prod && bun run src/app.ts",
     "generate": "npx prisma generate",

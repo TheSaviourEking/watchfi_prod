@@ -17,8 +17,8 @@ const server = fastify({ logger: true });
 server.register(import('@fastify/cors'), {
     origin: process.env.NODE_ENV === 'production' ? ['https://watchfi-prod.onrender.com'] : true,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    // methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    // allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
 // Health check endpoint
@@ -34,7 +34,7 @@ server.get('/health', async (_, reply: FastifyReply) => {
 // Serve static files from the public directory
 server.register(import('@fastify/static'), {
     // root: path.join(__dirname, '..',"..","watchfi_vite","dist", 'public'), // Fixed typo: ',,' to '..'
-    root: path.join(__dirname, '..', "..", "watchfi_vite", "dist"),
+    root: path.join(__dirname, '..', "..", "client", "dist"),
     prefix: '/',
     wildcard: false,
 });
